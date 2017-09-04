@@ -14,6 +14,7 @@ function calendarHeatmap() {
   var data = [];
   var max = null;
   var colorRange = ['#D8E6E7', '#218380'];
+  var colorBrackets = null;
   var tooltipEnabled = true;
   var tooltipUnit = 'contribution';
   var legendEnabled = true;
@@ -60,6 +61,12 @@ function calendarHeatmap() {
     return chart;
   };
 
+  chart.colorBrackets = function (value) {
+    if (!arguments.length) { return colorBrackets; }
+    colorBrackets = value;
+    return chart;
+  }
+
   chart.tooltipEnabled = function (value) {
     if (!arguments.length) { return tooltipEnabled; }
     tooltipEnabled = value;
@@ -100,9 +107,19 @@ function calendarHeatmap() {
     if (max === null) { max = d3.max(chart.data(), function (d) { return d.count; }); } // max data value
 
     // color range
-    var color = d3.scale.linear()
-      .range(chart.colorRange())
-      .domain([0, max]);
+    if (chart.colorBrackets()) {
+      var color = function (count) {
+        for (var i = chart.colorBrackets().length - 1; i >= 0; i--) {
+          if (count >= chart.colorBrackets()[i].min) {
+            return chart.colorBrackets()[i].color;
+          }
+        }
+      }
+    } else {
+      var color = d3.scale.linear()
+        .range(chart.colorRange())
+        .domain([0, max]);
+    }
 
     var tooltip;
     var dayRects;
@@ -159,14 +176,21 @@ function calendarHeatmap() {
       }
 
       if (chart.legendEnabled()) {
-        var colorRange = [color(0)];
-        for (var i = 3; i > 0; i--) {
-          colorRange.push(color(max / i));
+        var colorBrackets = [];
+        if (chart.colorBrackets()) {
+          for (var i = 0; i < chart.colorBrackets().length; i++) {
+            colorBrackets.push(chart.colorBrackets()[i].color);
+          }
+        } else {
+          colorBrackets.push(color(0));
+          for (var i = 3; i > 0; i--) {
+            colorBrackets.push(color(max / i));
+          }
         }
 
         var legendGroup = svg.append('g');
         legendGroup.selectAll('.calendar-heatmap-legend')
-            .data(colorRange)
+            .data(colorBrackets)
             .enter()
           .append('rect')
             .attr('class', 'calendar-heatmap-legend')
@@ -184,7 +208,7 @@ function calendarHeatmap() {
 
         legendGroup.append('text')
           .attr('class', 'calendar-heatmap-legend-text calendar-heatmap-legend-text-more')
-          .attr('x', (width - legendWidth + SQUARE_PADDING) + (colorRange.length + 1) * 13)
+          .attr('x', (width - legendWidth + SQUARE_PADDING) + (colorBrackets.length + 1) * 13)
           .attr('y', height + SQUARE_LENGTH)
           .text(locale.More);
       }
