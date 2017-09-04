@@ -19,6 +19,8 @@ function calendarHeatmap() {
   var tooltipUnit = 'contribution';
   var legendEnabled = true;
   var onClick = null;
+  var onMouseDown = null;
+  var onMouseEnter = null;
   var weekStart = 0; //0 for Sunday, 1 for Monday
   var locale = {
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -91,6 +93,18 @@ function calendarHeatmap() {
     return chart;
   };
 
+  chart.onMouseDown = function (value) {
+    if (!arguments.length) { return onMouseDown(); }
+    onMouseDown = value;
+    return chart;
+  };
+
+  chart.onMouseEnter = function (value) {
+    if (!arguments.length) { return onMouseEnter(); }
+    onMouseEnter = value;
+    return chart;
+  };
+
   chart.locale = function (value) {
     if (!arguments.length) { return locale; }
     locale = value;
@@ -156,6 +170,18 @@ function calendarHeatmap() {
         dayRects.on('click', function (d, i) {
           var count = countForDate(d);
           onClick({ date: d, count: count}, dayRects[0][i]);
+        });
+      }
+      if (typeof onMouseDown === 'function') {
+        dayRects.on('mousedown', function (d, i) {
+          var count = countForDate(d);
+          onMouseDown({ date: d, count: count}, dayRects[0][i]);
+        });
+      }
+      if (typeof onMouseEnter === 'function') {
+        dayRects.on('mouseenter', function (d, i) {
+          var count = countForDate(d);
+          onMouseEnter({ date: d, count: count}, dayRects[0][i]);
         });
       }
 
