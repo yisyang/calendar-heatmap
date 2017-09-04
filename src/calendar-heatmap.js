@@ -153,9 +153,9 @@ function calendarHeatmap() {
         });
 
       if (typeof onClick === 'function') {
-        dayRects.on('click', function (d) {
+        dayRects.on('click', function (d, i) {
           var count = countForDate(d);
-          onClick({ date: d, count: count});
+          onClick({ date: d, count: count}, dayRects[0][i]);
         });
       }
 
